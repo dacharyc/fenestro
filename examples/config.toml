@@ -1,0 +1,34 @@
+# Fenestro Configuration Example
+# Copy this file to: ~/.config/fenestro/config.toml
+#
+# On macOS/Linux, the config directory is determined by:
+#   1. $XDG_CONFIG_HOME/fenestro/ (if XDG_CONFIG_HOME is set)
+#   2. ~/.config/fenestro/ (default fallback)
+
+# ------------------------------------------------------------------------------
+# Font Size
+# ------------------------------------------------------------------------------
+# Base font size in pixels for rendered HTML content.
+# Set to 0 or omit entirely to use the browser's default font size.
+# This works alongside zoom (Cmd+/Cmd-) - they can be combined.
+#
+# Examples:
+#   font_size = 14   # Smaller text
+#   font_size = 18   # Larger text
+#   font_size = 0    # Use browser default (same as omitting)
+
+font_size = 16
+
+# ------------------------------------------------------------------------------
+# Chrome CSS
+# ------------------------------------------------------------------------------
+# Path to a custom CSS file for styling Fenestro's UI elements (chrome).
+# This includes the find bar, sidebar, file items, and search highlights.
+# The path can be absolute or relative to your current directory.
+#
+# Recommended: Use an absolute path for reliability, e.g.:
+#   chrome_css = "/Users/yourname/.config/fenestro/chrome.css"
+#
+# See examples/chrome.css for a comprehensive template with all stylable elements.
+
+chrome_css = "~/.config/fenestro/chrome.css"

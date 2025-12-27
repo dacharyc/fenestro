@@ -109,15 +109,22 @@ Fenestro supports a TOML configuration file following the [XDG Base Directory](h
 
 **Location:** `$XDG_CONFIG_HOME/fenestro/config.toml` (defaults to `~/.config/fenestro/config.toml`)
 
-### Example config.toml
+### Example Files
 
-```toml
-# Default font size in pixels (0 or omit to use browser default)
-font_size = 18
+The `examples/` directory contains ready-to-use templates:
 
-# Path to custom CSS file for styling fenestro UI elements
-chrome_css = "/path/to/my-fenestro-theme.css"
+- **`examples/config.toml`** - Documented configuration with all options
+- **`examples/chrome.css`** - Comprehensive CSS template with all stylable elements and example themes (Nord, Solarized Light, Dracula)
+
+To get started quickly:
+
+```bash
+mkdir -p ~/.config/fenestro
+cp examples/config.toml ~/.config/fenestro/
+cp examples/chrome.css ~/.config/fenestro/
 ```
+
+Then edit the files to customize font size and UI styling.
 
 ### Available Options
 

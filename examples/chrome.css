@@ -1,0 +1,498 @@
+/*
+ * Fenestro Chrome CSS Example
+ * Copy this file to: ~/.config/fenestro/chrome.css
+ * Then reference it in your config.toml:
+ *   chrome_css = "~/.config/fenestro/chrome.css"
+ *
+ * This file demonstrates ALL stylable UI elements in Fenestro.
+ * Uncomment and modify the sections you want to customize.
+ */
+
+
+/* =============================================================================
+   FIND BAR
+   The Cmd+F search interface that appears at the top-right of the window.
+   ============================================================================= */
+
+/* Find bar container - the overall wrapper */
+/*
+#find-bar {
+    background: #f5f5f5;
+    border: 1px solid #ccc;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    padding: 8px 12px;
+    gap: 8px;
+}
+*/
+
+/* Find bar text input field */
+/*
+#find-input {
+    width: 200px;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 13px;
+    background: white;
+    color: #333;
+}
+*/
+
+/* Find input focus state */
+/*
+#find-input:focus {
+    border-color: #007AFF;
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+    outline: none;
+}
+*/
+
+/* Navigation buttons (Previous/Next) */
+/*
+#find-prev,
+#find-next {
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+    font-size: 12px;
+    cursor: pointer;
+}
+*/
+
+/* Button hover state */
+/*
+#find-prev:hover,
+#find-next:hover {
+    background: #e5e5e5;
+}
+*/
+
+/* Button active/pressed state */
+/*
+#find-prev:active,
+#find-next:active {
+    background: #d5d5d5;
+}
+*/
+
+/* Match count display (e.g., "1 of 5") */
+/*
+#find-count {
+    font-size: 12px;
+    color: #666;
+    min-width: 60px;
+    text-align: center;
+}
+*/
+
+/* Close button (×) */
+/*
+#find-close {
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+    font-size: 12px;
+    cursor: pointer;
+}
+*/
+
+
+/* =============================================================================
+   SIDEBAR
+   The file list panel on the left when multiple files are opened together.
+   ============================================================================= */
+
+/* Sidebar container */
+/*
+#sidebar {
+    width: 200px;
+    min-width: 150px;
+    max-width: 300px;
+    background: #f0f0f0;
+    border-right: 1px solid #ccc;
+    overflow-y: auto;
+}
+*/
+
+/* File list wrapper inside sidebar */
+/*
+#file-list {
+    padding: 0;
+    margin: 0;
+}
+*/
+
+/* Individual file entry */
+/*
+.file-item {
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #333;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-left: 3px solid transparent;
+}
+*/
+
+/* File item hover state */
+/*
+.file-item:hover {
+    background: #e0e0e0;
+}
+*/
+
+/* Currently selected file */
+/*
+.file-item.selected {
+    background: #d0d0d0;
+    border-left-color: #007AFF;
+    font-weight: 500;
+}
+*/
+
+
+/* =============================================================================
+   CONTENT AREA
+   The main area where HTML content is rendered.
+   ============================================================================= */
+
+/* Main content container */
+/*
+#content {
+    padding: 16px;
+    flex: 1;
+    overflow: auto;
+    background: white;
+}
+*/
+
+/* Main flex container (holds sidebar + content) */
+/*
+#main-container {
+    display: flex;
+    height: 100vh;
+}
+*/
+
+
+/* =============================================================================
+   SEARCH HIGHLIGHTS
+   Highlighted text matches when using Cmd+F find.
+   ============================================================================= */
+
+/* All search matches */
+/*
+.find-highlight {
+    background-color: #ffff00;
+    color: #000;
+    border-radius: 2px;
+}
+*/
+
+/* Current/active search match (the one you're on) */
+/*
+.find-highlight.current {
+    background-color: #ff9632;
+    color: #000;
+}
+*/
+
+
+/* =============================================================================
+   DARK MODE
+   Styles that apply when the system is in dark mode.
+   Use @media (prefers-color-scheme: dark) to target dark mode specifically.
+   ============================================================================= */
+
+/*
+@media (prefers-color-scheme: dark) {
+*/
+    /* Find bar - dark mode */
+    /*
+    #find-bar {
+        background: #2d2d2d;
+        border-color: #444;
+    }
+
+    #find-input {
+        background: #1a1a1a;
+        border-color: #444;
+        color: #e0e0e0;
+    }
+
+    #find-input:focus {
+        border-color: #0a84ff;
+        box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.3);
+    }
+
+    #find-prev,
+    #find-next,
+    #find-close {
+        background: #3a3a3a;
+        border-color: #555;
+        color: #e0e0e0;
+    }
+
+    #find-prev:hover,
+    #find-next:hover,
+    #find-close:hover {
+        background: #4a4a4a;
+    }
+
+    #find-count {
+        color: #999;
+    }
+    */
+
+    /* Sidebar - dark mode */
+    /*
+    #sidebar {
+        background: #1e1e1e;
+        border-right-color: #333;
+    }
+
+    .file-item {
+        color: #ccc;
+    }
+
+    .file-item:hover {
+        background: #2a2a2a;
+    }
+
+    .file-item.selected {
+        background: #333;
+        border-left-color: #0a84ff;
+        color: #fff;
+    }
+    */
+
+    /* Content area - dark mode */
+    /*
+    #content {
+        background: #1a1a1a;
+        color: #e0e0e0;
+    }
+    */
+
+    /* Search highlights - dark mode */
+    /*
+    .find-highlight {
+        background-color: #5c5c00;
+        color: #fff;
+    }
+
+    .find-highlight.current {
+        background-color: #b35c00;
+        color: #fff;
+    }
+    */
+/*
+}
+*/
+
+
+/* =============================================================================
+   EXAMPLE THEMES
+   Here are some complete theme examples you can uncomment and use.
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   Theme: Nord
+   A cool, arctic-inspired color palette
+   ----------------------------------------------------------------------------- */
+/*
+#find-bar {
+    background: #3b4252;
+    border-color: #4c566a;
+}
+
+#find-input {
+    background: #2e3440;
+    border-color: #4c566a;
+    color: #eceff4;
+}
+
+#find-input:focus {
+    border-color: #88c0d0;
+    box-shadow: 0 0 0 2px rgba(136, 192, 208, 0.3);
+}
+
+#find-prev, #find-next, #find-close {
+    background: #434c5e;
+    border-color: #4c566a;
+    color: #eceff4;
+}
+
+#find-prev:hover, #find-next:hover, #find-close:hover {
+    background: #4c566a;
+}
+
+#find-count {
+    color: #d8dee9;
+}
+
+#sidebar {
+    background: #2e3440;
+    border-right-color: #3b4252;
+}
+
+.file-item {
+    color: #d8dee9;
+}
+
+.file-item:hover {
+    background: #3b4252;
+}
+
+.file-item.selected {
+    background: #434c5e;
+    border-left-color: #88c0d0;
+    color: #eceff4;
+}
+
+.find-highlight {
+    background-color: #ebcb8b;
+    color: #2e3440;
+}
+
+.find-highlight.current {
+    background-color: #bf616a;
+    color: #eceff4;
+}
+*/
+
+/* -----------------------------------------------------------------------------
+   Theme: Solarized Light
+   A precision color scheme with warm tones
+   ----------------------------------------------------------------------------- */
+/*
+#find-bar {
+    background: #eee8d5;
+    border-color: #93a1a1;
+}
+
+#find-input {
+    background: #fdf6e3;
+    border-color: #93a1a1;
+    color: #657b83;
+}
+
+#find-input:focus {
+    border-color: #268bd2;
+    box-shadow: 0 0 0 2px rgba(38, 139, 210, 0.2);
+}
+
+#find-prev, #find-next, #find-close {
+    background: #fdf6e3;
+    border-color: #93a1a1;
+    color: #657b83;
+}
+
+#find-prev:hover, #find-next:hover, #find-close:hover {
+    background: #eee8d5;
+}
+
+#find-count {
+    color: #586e75;
+}
+
+#sidebar {
+    background: #eee8d5;
+    border-right-color: #93a1a1;
+}
+
+.file-item {
+    color: #657b83;
+}
+
+.file-item:hover {
+    background: #fdf6e3;
+}
+
+.file-item.selected {
+    background: #fdf6e3;
+    border-left-color: #268bd2;
+    color: #073642;
+}
+
+.find-highlight {
+    background-color: #b58900;
+    color: #fdf6e3;
+}
+
+.find-highlight.current {
+    background-color: #cb4b16;
+    color: #fdf6e3;
+}
+*/
+
+/* -----------------------------------------------------------------------------
+   Theme: Dracula
+   A dark theme with vibrant colors
+   ----------------------------------------------------------------------------- */
+/*
+#find-bar {
+    background: #44475a;
+    border-color: #6272a4;
+}
+
+#find-input {
+    background: #282a36;
+    border-color: #6272a4;
+    color: #f8f8f2;
+}
+
+#find-input:focus {
+    border-color: #bd93f9;
+    box-shadow: 0 0 0 2px rgba(189, 147, 249, 0.3);
+}
+
+#find-prev, #find-next, #find-close {
+    background: #44475a;
+    border-color: #6272a4;
+    color: #f8f8f2;
+}
+
+#find-prev:hover, #find-next:hover, #find-close:hover {
+    background: #6272a4;
+}
+
+#find-count {
+    color: #f8f8f2;
+}
+
+#sidebar {
+    background: #282a36;
+    border-right-color: #44475a;
+}
+
+.file-item {
+    color: #f8f8f2;
+}
+
+.file-item:hover {
+    background: #44475a;
+}
+
+.file-item.selected {
+    background: #44475a;
+    border-left-color: #bd93f9;
+    color: #f8f8f2;
+}
+
+.find-highlight {
+    background-color: #f1fa8c;
+    color: #282a36;
+}
+
+.find-highlight.current {
+    background-color: #ff79c6;
+    color: #282a36;
+}
+*/
