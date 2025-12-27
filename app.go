@@ -16,6 +16,14 @@ type App struct {
 	windowID     string
 	config       Config
 	mu           sync.RWMutex
+	// Initial window position to set on startup (if shouldSetPosition is true)
+	initialX          int
+	initialY          int
+	initialWidth      int
+	initialHeight     int
+	shouldSetPosition bool
+	// Cached geometry to avoid redundant saves
+	lastSavedGeometry WindowState
 }
 
 // NewApp creates a new App with the given initial file
@@ -31,6 +39,60 @@ func NewApp(file FileEntry, windowID string) *App {
 // startup is called when the app starts
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+
+	// Set window position if we have saved state or config defaults
+	if a.shouldSetPosition {
+		ValidateAndSetWindowPosition(ctx, a.initialX, a.initialY, a.initialWidth, a.initialHeight)
+	}
+}
+
+// macOS title bar height in pixels
+// This is needed because Wails Width/Height options set content size,
+// but WindowGetSize returns frame size (including title bar)
+const macOSTitleBarHeight = 28
+
+// GetWindowGeometry returns the current window geometry for saving
+func (a *App) GetWindowGeometry() WindowState {
+	if a.ctx == nil {
+		return WindowState{}
+	}
+	w, h := runtime.WindowGetSize(a.ctx)
+	x, y := runtime.WindowGetPosition(a.ctx)
+
+	// Subtract title bar height since Wails options expect content height
+	// but WindowGetSize returns frame height
+	contentHeight := h - macOSTitleBarHeight
+	if contentHeight < MinWindowHeight {
+		contentHeight = MinWindowHeight
+	}
+
+	return WindowState{
+		Width:  w,
+		Height: contentHeight,
+		X:      x,
+		Y:      y,
+	}
+}
+
+// SaveWindowGeometry saves the current window geometry if it has changed.
+// Called from frontend when window is moved or resized.
+func (a *App) SaveWindowGeometry() {
+	geometry := a.GetWindowGeometry()
+	if !geometry.IsValid() {
+		return
+	}
+
+	// Only save if geometry has changed
+	if geometry.Width == a.lastSavedGeometry.Width &&
+		geometry.Height == a.lastSavedGeometry.Height &&
+		geometry.X == a.lastSavedGeometry.X &&
+		geometry.Y == a.lastSavedGeometry.Y {
+		return
+	}
+
+	if err := SaveWindowState(geometry); err == nil {
+		a.lastSavedGeometry = geometry
+	}
 }
 
 // GetHTMLContent returns the HTML content of the currently selected file

@@ -350,11 +350,39 @@ import { applyFontSize, injectChromeCSS } from './config.js';
         }
     }
 
+    // Window geometry saving
+    // Debounced save to avoid excessive disk writes
+    const saveWindowGeometry = debounce(async () => {
+        try {
+            await window.go.main.App.SaveWindowGeometry();
+        } catch (err) {
+            // Silently ignore - not critical
+        }
+    }, 500);
+
+    // Listen for resize events (handles both resize and maximize/restore)
+    window.addEventListener('resize', saveWindowGeometry);
+
+    // Poll for position changes since there's no native window move event
+    // We check every 2 seconds and save if changed
+    let geometryCheckInterval;
+    function startGeometryTracking() {
+        // Save initial geometry after a short delay to let window settle
+        setTimeout(saveWindowGeometry, 1000);
+
+        // Check periodically for position changes
+        geometryCheckInterval = setInterval(saveWindowGeometry, 2000);
+    }
+
+    // Save geometry when window loses focus (user likely done moving/resizing)
+    window.addEventListener('blur', saveWindowGeometry);
+
     // Initialize
     document.addEventListener('DOMContentLoaded', async () => {
         await loadConfig();
         await loadContent();
         await loadFiles();
+        startGeometryTracking();
     });
 
     // Listen for backend events

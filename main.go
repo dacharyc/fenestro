@@ -231,6 +231,21 @@ func runGUI(entry FileEntry, windowID string, isWindowIDMode bool) {
 	// Create app with the file entry
 	app := NewApp(entry, windowID)
 
+	// Load saved window state
+	state := LoadWindowState()
+	config := app.config
+
+	// Determine window dimensions
+	width, height := GetWindowDimensions(state, config)
+
+	// Determine window position (to be set after startup)
+	x, y, shouldSetPosition := GetWindowPosition(state, config)
+	app.initialX = x
+	app.initialY = y
+	app.initialWidth = width
+	app.initialHeight = height
+	app.shouldSetPosition = shouldSetPosition
+
 	// Start IPC server
 	var ipcServer *IPCServer
 	var err error
@@ -246,10 +261,10 @@ func runGUI(entry FileEntry, windowID string, isWindowIDMode bool) {
 	// Run Wails application
 	err = wails.Run(&options.App{
 		Title:     entry.Name,
-		Width:     900,
-		Height:    700,
-		MinWidth:  400,
-		MinHeight: 300,
+		Width:     width,
+		Height:    height,
+		MinWidth:  MinWindowWidth,
+		MinHeight: MinWindowHeight,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},

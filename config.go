@@ -14,6 +14,14 @@ type Config struct {
 	FontSize int `toml:"font_size" json:"font_size"`
 	// ChromeCSS is the path to a custom CSS file for styling fenestro UI
 	ChromeCSS string `toml:"chrome_css" json:"chrome_css"`
+	// DefaultWidth is the default window width in pixels (0 = use app default)
+	DefaultWidth int `toml:"default_width" json:"default_width"`
+	// DefaultHeight is the default window height in pixels (0 = use app default)
+	DefaultHeight int `toml:"default_height" json:"default_height"`
+	// DefaultX is the default window X position in pixels (0 = use system default)
+	DefaultX int `toml:"default_x" json:"default_x"`
+	// DefaultY is the default window Y position in pixels (0 = use system default)
+	DefaultY int `toml:"default_y" json:"default_y"`
 }
 
 // DefaultConfig returns the default configuration values

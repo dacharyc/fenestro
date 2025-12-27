@@ -32,3 +32,21 @@ font_size = 16
 # See examples/chrome.css for a comprehensive template with all stylable elements.
 
 chrome_css = "~/.config/fenestro/chrome.css"
+
+# ------------------------------------------------------------------------------
+# Window Size and Position
+# ------------------------------------------------------------------------------
+# Default window dimensions and position. These serve as fallback values when
+# no saved window state exists. After the first use, Fenestro automatically
+# saves and restores your last window size and position.
+#
+# To reset to these defaults, delete: ~/.config/fenestro/state.json
+#
+# Width and height are in pixels. Minimum size is 400x300.
+# Position (0,0) is the top-left corner of the primary screen.
+# Omit position values to let the OS decide window placement.
+
+# default_width = 900
+# default_height = 700
+# default_x = 100
+# default_y = 100
