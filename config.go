@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -62,8 +63,10 @@ func LoadConfig() Config {
 
 	// Parse the config file
 	if _, err := toml.DecodeFile(configPath, &config); err != nil {
-		// Log error but continue with defaults
+		// Log error to stderr but continue with defaults
 		// Don't fail startup due to config issues
+		fmt.Fprintf(os.Stderr, "Warning: Failed to parse config file %s: %v\n", configPath, err)
+		fmt.Fprintf(os.Stderr, "Using default configuration. Check TOML syntax (string values must be quoted).\n")
 		return DefaultConfig()
 	}
 
