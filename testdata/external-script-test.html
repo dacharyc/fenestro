@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>External Script Loading Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        #status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .failure { background: #f8d7da; color: #721c24; }
+        .pending { background: #fff3cd; color: #856404; }
+        #log { font-family: monospace; padding: 10px; background: #f5f5f5; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>External Script Loading Test</h1>
+    <p>This tests that external scripts load before inline scripts that depend on them.</p>
+
+    <div id="status" class="pending">Loading external library...</div>
+    <div id="log">Waiting for scripts to execute...</div>
+
+    <!-- Load lodash from CDN - this must complete before the inline script below -->
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+
+    <!-- This inline script depends on lodash being loaded -->
+    <script>
+        var log = [];
+
+        // Check if lodash is available
+        if (typeof _ !== 'undefined') {
+            log.push('lodash loaded successfully');
+            log.push('_.VERSION = ' + _.VERSION);
+
+            // Use some lodash functions to prove it works
+            var arr = [1, 2, 3, 4, 5];
+            var doubled = _.map(arr, function(n) { return n * 2; });
+            log.push('_.map([1,2,3,4,5], n => n*2) = [' + doubled.join(', ') + ']');
+
+            var sum = _.sum(arr);
+            log.push('_.sum([1,2,3,4,5]) = ' + sum);
+
+            document.getElementById('status').className = 'success';
+            document.getElementById('status').textContent = 'External script loaded and working!';
+        } else {
+            log.push('ERROR: lodash is not defined!');
+            log.push('The external script did not load before this inline script.');
+            document.getElementById('status').className = 'failure';
+            document.getElementById('status').textContent = 'External script failed to load in order';
+        }
+
+        document.getElementById('log').textContent = log.join('\n');
+    </script>
+</body>
+</html>

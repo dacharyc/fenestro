@@ -1,0 +1,203 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Find bar styling */
+.find-bar {
+    position: fixed;
+    top: 0;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #f5f5f5;
+    border: 1px solid #ccc;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+}
+
+.find-bar.hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.find-bar input {
+    width: 200px;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 13px;
+    outline: none;
+}
+
+.find-bar input:focus {
+    border-color: #007AFF;
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+}
+
+.find-bar button {
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    font-size: 12px;
+    color: #333;
+}
+
+.find-bar button:hover {
+    background: #e5e5e5;
+}
+
+.find-bar button:active {
+    background: #d5d5d5;
+}
+
+#find-close {
+    font-size: 16px;
+    font-weight: bold;
+    padding: 2px 8px;
+}
+
+#find-count {
+    font-size: 12px;
+    color: #666;
+    min-width: 60px;
+    text-align: center;
+}
+
+/* Main container with sidebar and content */
+#main-container {
+    display: flex;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Sidebar styling */
+.sidebar {
+    width: 200px;
+    min-width: 150px;
+    max-width: 300px;
+    background: #f0f0f0;
+    border-right: 1px solid #ccc;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.sidebar.hidden {
+    display: none;
+}
+
+#file-list {
+    padding: 8px 0;
+}
+
+.file-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-left: 3px solid transparent;
+}
+
+.file-item:hover {
+    background: #e0e0e0;
+}
+
+.file-item.selected {
+    background: #d0d0d0;
+    border-left-color: #007AFF;
+    font-weight: 500;
+}
+
+/* Content area */
+#content {
+    padding: 16px;
+    flex: 1;
+    overflow: auto;
+}
+
+/* Highlight styling for search matches */
+.find-highlight {
+    background-color: #ffff00;
+    color: #000;
+}
+
+.find-highlight.current {
+    background-color: #ff9632;
+    color: #000;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .find-bar {
+        background: #2d2d2d;
+        border-color: #444;
+    }
+
+    .find-bar input {
+        background: #1a1a1a;
+        border-color: #444;
+        color: #fff;
+    }
+
+    .find-bar input:focus {
+        border-color: #0a84ff;
+        box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.3);
+    }
+
+    .find-bar button {
+        background: #3a3a3a;
+        border-color: #555;
+        color: #fff;
+    }
+
+    .find-bar button:hover {
+        background: #4a4a4a;
+    }
+
+    #find-count {
+        color: #999;
+    }
+
+    .find-highlight {
+        background-color: #b3b300;
+    }
+
+    .find-highlight.current {
+        background-color: #cc7a29;
+    }
+
+    /* Sidebar dark mode */
+    .sidebar {
+        background: #2d2d2d;
+        border-right-color: #444;
+    }
+
+    .file-item {
+        color: #e0e0e0;
+    }
+
+    .file-item:hover {
+        background: #3a3a3a;
+    }
+
+    .file-item.selected {
+        background: #444;
+        border-left-color: #0a84ff;
+    }
+}

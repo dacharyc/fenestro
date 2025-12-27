@@ -1,0 +1,622 @@
+	<html>
+		<head>
+			<title>main.js</title>
+			<style>
+			body{
+	background: rgb(36,36,36);
+	color: rgb(163,160,165);
+	/* a dim, but visible grey(ish) */
+}
+diff {
+	display: table;
+	width: 100%;
+}
+diffline{
+	clear: left;
+	display:table-row;
+}
+.unchanged {
+	display: none;
+}
+.expanded{
+	display: table-row;
+	background: #313131;
+}
+label {
+	display: inline-block;
+	cursor: pointer;
+	color: #F3D39D;
+}
+input[type=checkbox] {
+	display: none;
+}
+#unchanged_checkbox:checked ~ * .unchanged {
+	display: table-row;
+	background: #313131;
+}
+linum {
+	margin-right: 1rem;
+	padding-right: 0.5rem;
+	border-right: solid 1px #ccc;
+	text-align: right;
+	color: rgb(255,222,165);
+	width:7em;
+	text-overflow: ellipsis;
+	display:table-cell;
+	cursor: pointer;
+	font-family: monospace;
+}
+raw {
+	margin-left: 1rem;
+	padding-left: 0.5rem;
+	display:table-cell;
+	font-family: monospace;
+	white-space: pre;
+}
+inserted, deleted {
+	font-style: bold;
+}
+inserted {
+	color: #79DB73;
+}
+deleted {
+	color: #f1a340;
+}
+
+.filename {
+	color: rgba(115, 120, 144, 1);
+	font-family: sans-serif;
+	font-size: 120%;
+	padding-left: 6em;
+	border-bottom: solid 1px rgba(115, 120, 144, 1);
+}
+
+.chrome {
+	padding: 0.25rem 0.5rem 0.25rem 0.5rem;
+	background: rgba(235,235,235,0.85);
+	border-bottom: 1px solid rgba(0,0,0,0.1);
+	text-align: left;
+	width: 100%;
+	position: relative;
+	left: -8;
+	top: -8;
+}
+
+label {
+	max-height: 20px;
+}
+
+#unchanged_toggle{
+	width: 30px;
+	margin-top: -20px;
+	float: left;
+	margin-right: 1em;
+}
+#unchanged_toggle g path {
+	fill: #F3D39D;
+}
+			</style>
+			<script language="JavaScript">
+				var defaultClickExpansionSize = 10;
+
+function getChildren(node, skipMe){
+	var r = [];
+	for ( ; node; node = node.nextSibling ) {
+		if ( node.nodeType == 1 && node != skipMe){
+			r.push( node );
+		}
+	}
+	return r;
+};
+
+function getChildrenUpTo(node, stopAt){
+	var r = [];
+	for ( ; node; node = node.nextSibling ) {
+		if ( node.nodeType == 1 && node != stopAt) {
+			if (node.tagName == "DIFFLINE") {
+			// ^^ only to compensate for bug in bash version's source html
+				r.push( node );
+			}
+		} else if ( node == stopAt) {
+			break;
+		}
+	}
+	return r;
+}
+function getLaterNSiblings(node, n){
+	var r = [];
+	for ( ; node; node = node.nextSibling ) {
+		if ( r.length < n && node.nodeType == 1) {
+			// nodeType 3 is Text 1 is element. 
+			r.push( node )
+		} else if (r.length == n) {
+			break;
+		}
+	}
+	return r;
+}
+
+
+function getSiblings(n) {
+	return getChildren(n.parentNode.firstChild, n);
+}
+function getEarlierSiblings(n){
+	return getChildrenUpTo(n.parentNode.firstChild, n);
+}
+
+function getPreviousNSiblings(node, count){
+	return getEarlierSiblings(node).slice((count * -1));
+}
+
+function expandPreviousSiblings(node, how_many){
+	var predecessors = getPreviousNSiblings(node, how_many);
+	for (var x = predecessors.length -1; x > -1 ; x--){
+		expandNodeIfUnchanged(predecessors[x]);
+	}
+}
+function expandLaterSiblings(node, how_many){
+	var antecessors = getLaterNSiblings(node, how_many);
+	for (var x = 0; x < antecessors.length; x++){
+		expandNodeIfUnchanged( antecessors[x])
+	}
+}
+function expandNodeIfUnchanged(node){
+	if (typeof(node) != "undefined" && node.nodeType == 1){
+		if (node.className.indexOf("unchanged") > -1) {
+			node.className = node.className + " expanded";
+		}
+	}
+}
+
+function getChangedLineDivs(){
+	var all_lines = document.getElementsByTagName("diffline");
+	var changed_lines = [];
+	for (var x = 0; x < all_lines.length; x++){
+		var node = all_lines[x];
+		if (node.className.indexOf("unchanged") == -1) {
+			changed_lines.push(node);
+		}
+	}
+	return changed_lines;
+}
+function addOnClickToLineNumbers(number_anchors){
+	for (var x = 0; x < number_anchors.length; x++){
+		var anchor = number_anchors[x]
+		anchor.addEventListener("click",
+			function(){
+				expandPreviousSiblings(
+					this.parentNode,
+				    defaultClickExpansionSize
+				)}, false);
+	}
+}
+function expandAroundChangedLines(){
+	var changed_lines = getChangedLineDivs();
+	for (var x = 0; x < changed_lines.length; x++){
+		var node = changed_lines[x]
+		expandPreviousSiblings(node, 5);
+		expandLaterSiblings(node, 5);
+	}
+}
+
+function activateLineNumbers(){
+	var linum_elements =  document.getElementsByTagName("linum");
+	addOnClickToLineNumbers(linum_elements);
+	expandAroundChangedLines()
+}
+
+Array.prototype.first = function(){
+	if (this.length > 1){
+		return this[0];
+	}
+	return null;
+}
+
+Array.prototype.rest = function(){
+	if (this.length > 1){
+		return this.slice(1)
+	}
+	return new Array();
+}
+			</script>
+		</head>
+		<body>
+			<input type="checkbox" id="unchanged_checkbox">
+			<div class="filename">
+				<label for="unchanged_checkbox">
+            <svg id="unchanged_toggle" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0" y="0" width="100" height="63" viewBox="0, 0, 100, 63">
+  <g id="Layer_1">
+    <path d="M58.6,29 L66.7,20.9 C68.3,23.7 69.2,27 69.2,30.4 C69.2,41 60.6,49.6 50,49.6 C46.5,49.6 43.3,48.7 40.5,47.1 L48.4,39.2 C48.8,39.2 49.1,39.3 49.5,39.3 C54.6,39.3 58.7,35.2 58.7,30.1 C58.7,29.7 58.7,29.4 58.6,29 z M58.7,30.1 C58.7,35.2 54.6,39.3 49.5,39.3 C49.1,39.3 48.8,39.3 48.4,39.2 L40.5,47.1 C43.3,48.7 46.6,49.6 50,49.6 C60.6,49.6 69.2,41 69.2,30.4 C69.2,26.9 68.3,23.7 66.7,20.9 L58.6,29 C58.7,29.4 58.7,29.7 58.7,30.1 z M100,30.3 C100,30.3 100,30.2 100,30.2 C100,30.2 100,30.2 100,30.1 C100,30.1 100,30 100,30 C100,30 100,29.9 100,29.9 C100,29.9 100,29.9 100,29.9 C99.9,29.3 99.7,28.8 99.3,28.3 C99.2,28.1 99.1,28 98.9,27.9 C95.7,24.1 91.9,20.8 88.1,17.7 C87.3,17.1 86.5,16.5 85.7,15.9 C85.6,15.8 85.5,15.7 85.3,15.6 C84.5,15 83.7,14.4 82.8,13.8 C82.8,13.8 82.7,13.8 82.7,13.7 C80.9,12.5 79.1,11.3 77.3,10.3 L66.7,21 C68.3,23.8 69.2,27.1 69.2,30.5 C69.2,41.1 60.6,49.7 50,49.7 C46.5,49.7 43.3,48.8 40.5,47.2 L32.3,55.4 C33.5,55.9 34.8,56.3 36.1,56.7 C36.1,56.7 36.2,56.7 36.2,56.7 C36.8,56.9 37.4,57 38,57.2 C38.1,57.2 38.2,57.3 38.3,57.3 C39,57.5 39.6,57.6 40.3,57.8 C44.8,58.8 49.4,59 54,58.7 C55.5,58.6 57,58.4 58.6,58.1 C62.1,57.5 65.5,56.4 68.7,55.1 C70.7,54.3 72.6,53.4 74.5,52.5 C77.4,51 80.3,49.3 83,47.4 C84.8,46.1 86.6,44.8 88.3,43.4 C90.9,41.3 93.3,39.1 95.7,36.8 C96.9,35.7 98,34.5 99,33.2 C99.3,32.9 99.5,32.6 99.7,32.3 C99.9,32 100,31.6 100.1,31.2 C100.1,31.2 100.1,31.2 100.1,31.2 C100.1,31.2 100.1,31.1 100.1,31.1 C100.1,31.1 100.1,31 100.1,31 C100.1,31 100.1,31 100.1,30.9 C100.1,30.9 100.1,30.8 100.1,30.8 C100.1,30.7 100.1,30.7 100.1,30.6 C100.1,30.5 100,30.4 100,30.3 z M58.7,30.1 C58.7,29.7 58.7,29.4 58.6,29 L48.4,39.2 C48.8,39.2 49.1,39.3 49.5,39.3 C54.6,39.3 58.7,35.2 58.7,30.1 z M48.4,39.2 L58.6,29 L66.7,20.9 L77.4,10.2 L84.8,2.8 C85.4,2.2 85.4,1.3 84.8,0.7 C84.2,0.1 83.3,0.1 82.7,0.7 L23,60.4 C22.4,61 22.4,61.9 23,62.5 C23.3,62.8 23.7,62.9 24.1,62.9 C24.5,62.9 24.9,62.8 25.2,62.5 L32.4,55.3 L40.6,47.1 L48.4,39.2 z" fill="#000000"/>
+    <path d="M67.8,5.7 C65.2,4.7 62.5,3.9 59.8,3.3 C53.7,2 47.6,1.9 41.5,3 C36,4 30.6,6.1 25.6,8.6 C17.8,12.6 10.6,18.1 4.4,24.3 C3.2,25.4 2.1,26.6 1.1,27.9 C-0.3,29.6 -0.3,31.5 1.1,33.2 C4.3,37 8.1,40.3 11.9,43.4 C15.3,46.1 18.9,48.6 22.7,50.8 L67.8,5.7 z" fill="#000000"/>
+  </g>
+</svg>
+			main.js
+				</label>
+			</div>
+			<diff><diffline class='unchanged'><linum>1:1</linum><raw>// Fenestro - Find in page and sidebar functionality </raw></diffline>
+<diffline class='unchanged'><linum>2:2</linum><raw> </raw></diffline>
+<diffline><linum>3:3</linum><raw><inserted>import { renderHTML as renderHTMLContent } from './html-renderer.js';</inserted> </raw></diffline>
+<diffline><linum>3:4</linum><raw><inserted>⏎</inserted> </raw></diffline>
+<diffline><linum>3:5</linum><raw><inserted>⏎</inserted>(function() { </raw></diffline>
+<diffline class='unchanged'><linum>4:6</linum><raw>'use strict'; </raw></diffline>
+<diffline class='unchanged'><linum>5:7</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>6:8</linum><raw>// State </raw></diffline>
+<diffline class='unchanged'><linum>7:9</linum><raw>let matches = []; </raw></diffline>
+<diffline class='unchanged'><linum>8:10</linum><raw>let currentMatchIndex = -1; </raw></diffline>
+<diffline class='unchanged'><linum>9:11</linum><raw>let lastSearchTerm = ''; </raw></diffline>
+<diffline class='unchanged'><linum>10:12</linum><raw>let files = []; </raw></diffline>
+<diffline class='unchanged'><linum>11:13</linum><raw>let selectedIndex = 0; </raw></diffline>
+<diffline class='unchanged'><linum>12:14</linum><raw>let zoomLevel = 1.0; </raw></diffline>
+<diffline class='unchanged'><linum>13:15</linum><raw>const ZOOM_STEP = 0.1; </raw></diffline>
+<diffline class='unchanged'><linum>14:16</linum><raw>const ZOOM_MIN = 0.25; </raw></diffline>
+<diffline class='unchanged'><linum>15:17</linum><raw>const ZOOM_MAX = 5.0; </raw></diffline>
+<diffline class='unchanged'><linum>16:18</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>17:19</linum><raw>// DOM elements </raw></diffline>
+<diffline class='unchanged'><linum>18:20</linum><raw>const findBar = document.getElementById('find-bar'); </raw></diffline>
+<diffline class='unchanged'><linum>19:21</linum><raw>const findInput = document.getElementById('find-input'); </raw></diffline>
+<diffline class='unchanged'><linum>20:22</linum><raw>const findCount = document.getElementById('find-count'); </raw></diffline>
+<diffline class='unchanged'><linum>21:23</linum><raw>const findPrev = document.getElementById('find-prev'); </raw></diffline>
+<diffline class='unchanged'><linum>22:24</linum><raw>const findNext = document.getElementById('find-next'); </raw></diffline>
+<diffline class='unchanged'><linum>23:25</linum><raw>const findClose = document.getElementById('find-close'); </raw></diffline>
+<diffline class='unchanged'><linum>24:26</linum><raw>const content = document.getElementById('content'); </raw></diffline>
+<diffline class='unchanged'><linum>25:27</linum><raw>const sidebar = document.getElementById('sidebar'); </raw></diffline>
+<diffline class='unchanged'><linum>26:28</linum><raw>const fileList = document.getElementById('file-list'); </raw></diffline>
+<diffline class='unchanged'><linum>27:29</linum><raw> </raw></diffline>
+<diffline><linum>28:30</linum><raw>// <deleted>Execute scripts that were inserted via innerHTML</deleted> <inserted>Render HTML content using the html-renderer module</inserted> </raw></diffline>
+<diffline><linum>29:31</linum><raw>function <deleted>executeScripts</deleted> <inserted>renderHTML</inserted>(<deleted>container</deleted><inserted>html</inserted>) { </raw></diffline>
+<diffline><linum>30:32</linum><raw><deleted>const scripts = container.querySelectorAll('script');</deleted> </raw></diffline>
+<diffline><linum>31:32</linum><raw><deleted>        scripts.forEach(oldScript => {</deleted> </raw></diffline>
+<diffline><linum>32:32</linum><raw><deleted>            const newScript = document.createElement('script');</deleted> </raw></diffline>
+<diffline><linum>33:32</linum><raw><deleted>            // Copy attributes (src, type, etc.)</deleted> </raw></diffline>
+<diffline><linum>34:32</linum><raw><deleted>            Array.from(oldScript.attributes).forEach(attr => {</deleted> </raw></diffline>
+<diffline><linum>35:32</linum><raw><deleted>                newScript.setAttribute</deleted>        <inserted>renderHTMLContent</inserted>(<deleted>attr.name</deleted><inserted>html</inserted>, <deleted>attr.value);</deleted> </raw></diffline>
+<diffline><linum>36:32</linum><raw><deleted>            });</deleted> </raw></diffline>
+<diffline><linum>37:32</linum><raw><deleted>            // Copy inline</deleted> content<deleted>⏎</deleted> </raw></diffline>
+<diffline><linum>38:32</linum><raw><deleted>            newScript.textContent = oldScript.textContent;</deleted> </raw></diffline>
+<diffline><linum>39:32</linum><raw><deleted>            oldScript.parentNode.replaceChild(newScript, oldScript);</deleted> </raw></diffline>
+<diffline><linum>40:32</linum><raw><deleted>        }</deleted>); </raw></diffline>
+<diffline class='unchanged'><linum>41:33</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>42:34</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>43:35</linum><raw>// Load HTML content from backend </raw></diffline>
+<diffline class='unchanged'><linum>44:36</linum><raw>async function loadContent() { </raw></diffline>
+<diffline class='unchanged'><linum>45:37</linum><raw>try { </raw></diffline>
+<diffline class='unchanged'><linum>46:38</linum><raw>const html = await window.go.main.App.GetHTMLContent(); </raw></diffline>
+<diffline><linum>47:39</linum><raw><deleted>content.innerHTML = html;</deleted> </raw></diffline>
+<diffline><linum>48:39</linum><raw><deleted>            executeScripts</deleted>            <inserted>renderHTML</inserted>(<deleted>content</deleted><inserted>html</inserted>); </raw></diffline>
+<diffline class='unchanged'><linum>49:40</linum><raw>} catch (err) { </raw></diffline>
+<diffline class='unchanged'><linum>50:41</linum><raw>content.innerHTML = '<p style="color: red;">Error loading content: ' + err + '</p>'; </raw></diffline>
+<diffline class='unchanged'><linum>51:42</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>52:43</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>53:44</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>54:45</linum><raw>// Load files and update sidebar </raw></diffline>
+<diffline class='unchanged'><linum>55:46</linum><raw>async function loadFiles() { </raw></diffline>
+<diffline class='unchanged'><linum>56:47</linum><raw>try { </raw></diffline>
+<diffline class='unchanged'><linum>57:48</linum><raw>files = await window.go.main.App.GetFiles(); </raw></diffline>
+<diffline class='unchanged'><linum>58:49</linum><raw>selectedIndex = await window.go.main.App.GetCurrentIndex(); </raw></diffline>
+<diffline class='unchanged'><linum>59:50</linum><raw>updateSidebar(); </raw></diffline>
+<diffline class='unchanged'><linum>60:51</linum><raw>} catch (err) { </raw></diffline>
+<diffline class='unchanged'><linum>61:52</linum><raw>console.error('Error loading files:', err); </raw></diffline>
+<diffline class='unchanged'><linum>62:53</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>63:54</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>64:55</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>65:56</linum><raw>// Update the sidebar display </raw></diffline>
+<diffline class='unchanged'><linum>66:57</linum><raw>function updateSidebar() { </raw></diffline>
+<diffline class='unchanged'><linum>67:58</linum><raw>// Show/hide sidebar based on file count </raw></diffline>
+<diffline class='unchanged'><linum>68:59</linum><raw>if (files.length > 1) { </raw></diffline>
+<diffline class='unchanged'><linum>69:60</linum><raw>sidebar.classList.remove('hidden'); </raw></diffline>
+<diffline class='unchanged'><linum>70:61</linum><raw>} else { </raw></diffline>
+<diffline class='unchanged'><linum>71:62</linum><raw>sidebar.classList.add('hidden'); </raw></diffline>
+<diffline class='unchanged'><linum>72:63</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>73:64</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>74:65</linum><raw>// Render file list </raw></diffline>
+<diffline class='unchanged'><linum>75:66</linum><raw>fileList.innerHTML = ''; </raw></diffline>
+<diffline class='unchanged'><linum>76:67</linum><raw>files.forEach((file, index) => { </raw></diffline>
+<diffline class='unchanged'><linum>77:68</linum><raw>const item = document.createElement('div'); </raw></diffline>
+<diffline class='unchanged'><linum>78:69</linum><raw>item.className = 'file-item' + (index === selectedIndex ? ' selected' : ''); </raw></diffline>
+<diffline class='unchanged'><linum>79:70</linum><raw>item.textContent = file.name; </raw></diffline>
+<diffline class='unchanged'><linum>80:71</linum><raw>item.title = file.path || file.name; </raw></diffline>
+<diffline class='unchanged'><linum>81:72</linum><raw>item.addEventListener('click', () => selectFile(index)); </raw></diffline>
+<diffline class='unchanged'><linum>82:73</linum><raw>fileList.appendChild(item); </raw></diffline>
+<diffline class='unchanged'><linum>83:74</linum><raw>}); </raw></diffline>
+<diffline class='unchanged'><linum>84:75</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>85:76</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>86:77</linum><raw>// Select a file by index </raw></diffline>
+<diffline class='unchanged'><linum>87:78</linum><raw>async function selectFile(index) { </raw></diffline>
+<diffline class='unchanged'><linum>88:79</linum><raw>try { </raw></diffline>
+<diffline class='unchanged'><linum>89:80</linum><raw>const html = await window.go.main.App.SelectFile(index); </raw></diffline>
+<diffline><linum>90:81</linum><raw><deleted>content.innerHTML = html;</deleted> </raw></diffline>
+<diffline><linum>91:81</linum><raw><deleted>            executeScripts</deleted>            <inserted>renderHTML</inserted>(<deleted>content</deleted><inserted>html</inserted>); </raw></diffline>
+<diffline class='unchanged'><linum>92:82</linum><raw>selectedIndex = index; </raw></diffline>
+<diffline class='unchanged'><linum>93:83</linum><raw>updateSidebar(); </raw></diffline>
+<diffline class='unchanged'><linum>94:84</linum><raw>// Clear find highlights when switching files </raw></diffline>
+<diffline class='unchanged'><linum>95:85</linum><raw>clearHighlights(); </raw></diffline>
+<diffline class='unchanged'><linum>96:86</linum><raw>findInput.value = ''; </raw></diffline>
+<diffline class='unchanged'><linum>97:87</linum><raw>findCount.textContent = ''; </raw></diffline>
+<diffline class='unchanged'><linum>98:88</linum><raw>matches = []; </raw></diffline>
+<diffline class='unchanged'><linum>99:89</linum><raw>currentMatchIndex = -1; </raw></diffline>
+<diffline class='unchanged'><linum>100:90</linum><raw>lastSearchTerm = ''; </raw></diffline>
+<diffline class='unchanged'><linum>101:91</linum><raw>} catch (err) { </raw></diffline>
+<diffline class='unchanged'><linum>102:92</linum><raw>console.error('Error selecting file:', err); </raw></diffline>
+<diffline class='unchanged'><linum>103:93</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>104:94</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>105:95</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>106:96</linum><raw>// Handle file-added event from backend </raw></diffline>
+<diffline class='unchanged'><linum>107:97</linum><raw>function onFileAdded(data) { </raw></diffline>
+<diffline class='unchanged'><linum>108:98</linum><raw>files = data.files; </raw></diffline>
+<diffline class='unchanged'><linum>109:99</linum><raw>// Don't change selection, just update sidebar </raw></diffline>
+<diffline class='unchanged'><linum>110:100</linum><raw>updateSidebar(); </raw></diffline>
+<diffline class='unchanged'><linum>111:101</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>112:102</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>113:103</linum><raw>// Handle content-replaced event from backend </raw></diffline>
+<diffline class='unchanged'><linum>114:104</linum><raw>function onContentReplaced(data) { </raw></diffline>
+<diffline class='unchanged'><linum>115:105</linum><raw>files = data.files; </raw></diffline>
+<diffline class='unchanged'><linum>116:106</linum><raw>selectedIndex = data.currentIndex; </raw></diffline>
+<diffline class='unchanged'><linum>117:107</linum><raw>updateSidebar(); </raw></diffline>
+<diffline class='unchanged'><linum>118:108</linum><raw>loadContent(); </raw></diffline>
+<diffline class='unchanged'><linum>119:109</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>120:110</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>121:111</linum><raw>// Show find bar </raw></diffline>
+<diffline class='unchanged'><linum>122:112</linum><raw>function showFindBar() { </raw></diffline>
+<diffline class='unchanged'><linum>123:113</linum><raw>findBar.classList.remove('hidden'); </raw></diffline>
+<diffline class='unchanged'><linum>124:114</linum><raw>findInput.focus(); </raw></diffline>
+<diffline class='unchanged'><linum>125:115</linum><raw>findInput.select(); </raw></diffline>
+<diffline class='unchanged'><linum>126:116</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>127:117</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>128:118</linum><raw>// Hide find bar </raw></diffline>
+<diffline class='unchanged'><linum>129:119</linum><raw>function hideFindBar() { </raw></diffline>
+<diffline class='unchanged'><linum>130:120</linum><raw>findBar.classList.add('hidden'); </raw></diffline>
+<diffline class='unchanged'><linum>131:121</linum><raw>clearHighlights(); </raw></diffline>
+<diffline class='unchanged'><linum>132:122</linum><raw>findInput.value = ''; </raw></diffline>
+<diffline class='unchanged'><linum>133:123</linum><raw>findCount.textContent = ''; </raw></diffline>
+<diffline class='unchanged'><linum>134:124</linum><raw>matches = []; </raw></diffline>
+<diffline class='unchanged'><linum>135:125</linum><raw>currentMatchIndex = -1; </raw></diffline>
+<diffline class='unchanged'><linum>136:126</linum><raw>lastSearchTerm = ''; </raw></diffline>
+<diffline class='unchanged'><linum>137:127</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>138:128</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>139:129</linum><raw>// Clear all highlights </raw></diffline>
+<diffline class='unchanged'><linum>140:130</linum><raw>function clearHighlights() { </raw></diffline>
+<diffline class='unchanged'><linum>141:131</linum><raw>const highlights = content.querySelectorAll('.find-highlight'); </raw></diffline>
+<diffline class='unchanged'><linum>142:132</linum><raw>highlights.forEach(el => { </raw></diffline>
+<diffline class='unchanged'><linum>143:133</linum><raw>const parent = el.parentNode; </raw></diffline>
+<diffline class='unchanged'><linum>144:134</linum><raw>parent.replaceChild(document.createTextNode(el.textContent), el); </raw></diffline>
+<diffline class='unchanged'><linum>145:135</linum><raw>parent.normalize(); </raw></diffline>
+<diffline class='unchanged'><linum>146:136</linum><raw>}); </raw></diffline>
+<diffline class='unchanged'><linum>147:137</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>148:138</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>149:139</linum><raw>// Highlight all matches </raw></diffline>
+<diffline class='unchanged'><linum>150:140</linum><raw>function highlightMatches(searchTerm) { </raw></diffline>
+<diffline class='unchanged'><linum>151:141</linum><raw>if (!searchTerm) { </raw></diffline>
+<diffline class='unchanged'><linum>152:142</linum><raw>clearHighlights(); </raw></diffline>
+<diffline class='unchanged'><linum>153:143</linum><raw>findCount.textContent = ''; </raw></diffline>
+<diffline class='unchanged'><linum>154:144</linum><raw>matches = []; </raw></diffline>
+<diffline class='unchanged'><linum>155:145</linum><raw>currentMatchIndex = -1; </raw></diffline>
+<diffline class='unchanged'><linum>156:146</linum><raw>return; </raw></diffline>
+<diffline class='unchanged'><linum>157:147</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>158:148</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>159:149</linum><raw>// Clear previous highlights </raw></diffline>
+<diffline class='unchanged'><linum>160:150</linum><raw>clearHighlights(); </raw></diffline>
+<diffline class='unchanged'><linum>161:151</linum><raw>matches = []; </raw></diffline>
+<diffline class='unchanged'><linum>162:152</linum><raw>currentMatchIndex = -1; </raw></diffline>
+<diffline class='unchanged'><linum>163:153</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>164:154</linum><raw>const searchLower = searchTerm.toLowerCase(); </raw></diffline>
+<diffline class='unchanged'><linum>165:155</linum><raw>const walker = document.createTreeWalker( </raw></diffline>
+<diffline class='unchanged'><linum>166:156</linum><raw>content, </raw></diffline>
+<diffline class='unchanged'><linum>167:157</linum><raw>NodeFilter.SHOW_TEXT, </raw></diffline>
+<diffline class='unchanged'><linum>168:158</linum><raw>null, </raw></diffline>
+<diffline class='unchanged'><linum>169:159</linum><raw>false </raw></diffline>
+<diffline class='unchanged'><linum>170:160</linum><raw>); </raw></diffline>
+<diffline class='unchanged'><linum>171:161</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>172:162</linum><raw>const nodesToProcess = []; </raw></diffline>
+<diffline class='unchanged'><linum>173:163</linum><raw>let node; </raw></diffline>
+<diffline class='unchanged'><linum>174:164</linum><raw>while (node = walker.nextNode()) { </raw></diffline>
+<diffline class='unchanged'><linum>175:165</linum><raw>if (node.textContent.toLowerCase().includes(searchLower)) { </raw></diffline>
+<diffline class='unchanged'><linum>176:166</linum><raw>nodesToProcess.push(node); </raw></diffline>
+<diffline class='unchanged'><linum>177:167</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>178:168</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>179:169</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>180:170</linum><raw>nodesToProcess.forEach(textNode => { </raw></diffline>
+<diffline class='unchanged'><linum>181:171</linum><raw>const text = textNode.textContent; </raw></diffline>
+<diffline class='unchanged'><linum>182:172</linum><raw>const textLower = text.toLowerCase(); </raw></diffline>
+<diffline class='unchanged'><linum>183:173</linum><raw>const parent = textNode.parentNode; </raw></diffline>
+<diffline class='unchanged'><linum>184:174</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>185:175</linum><raw>// Skip if already in a highlight span </raw></diffline>
+<diffline class='unchanged'><linum>186:176</linum><raw>if (parent.classList && parent.classList.contains('find-highlight')) { </raw></diffline>
+<diffline class='unchanged'><linum>187:177</linum><raw>return; </raw></diffline>
+<diffline class='unchanged'><linum>188:178</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>189:179</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>190:180</linum><raw>const fragment = document.createDocumentFragment(); </raw></diffline>
+<diffline class='unchanged'><linum>191:181</linum><raw>let lastIndex = 0; </raw></diffline>
+<diffline class='unchanged'><linum>192:182</linum><raw>let matchIndex; </raw></diffline>
+<diffline class='unchanged'><linum>193:183</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>194:184</linum><raw>while ((matchIndex = textLower.indexOf(searchLower, lastIndex)) !== -1) { </raw></diffline>
+<diffline class='unchanged'><linum>195:185</linum><raw>// Add text before match </raw></diffline>
+<diffline class='unchanged'><linum>196:186</linum><raw>if (matchIndex > lastIndex) { </raw></diffline>
+<diffline class='unchanged'><linum>197:187</linum><raw>fragment.appendChild(document.createTextNode(text.slice(lastIndex, matchIndex))); </raw></diffline>
+<diffline class='unchanged'><linum>198:188</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>199:189</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>200:190</linum><raw>// Add highlighted match </raw></diffline>
+<diffline class='unchanged'><linum>201:191</linum><raw>const span = document.createElement('span'); </raw></diffline>
+<diffline class='unchanged'><linum>202:192</linum><raw>span.className = 'find-highlight'; </raw></diffline>
+<diffline class='unchanged'><linum>203:193</linum><raw>span.textContent = text.slice(matchIndex, matchIndex + searchTerm.length); </raw></diffline>
+<diffline class='unchanged'><linum>204:194</linum><raw>fragment.appendChild(span); </raw></diffline>
+<diffline class='unchanged'><linum>205:195</linum><raw>matches.push(span); </raw></diffline>
+<diffline class='unchanged'><linum>206:196</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>207:197</linum><raw>lastIndex = matchIndex + searchTerm.length; </raw></diffline>
+<diffline class='unchanged'><linum>208:198</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>209:199</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>210:200</linum><raw>// Add remaining text </raw></diffline>
+<diffline class='unchanged'><linum>211:201</linum><raw>if (lastIndex < text.length) { </raw></diffline>
+<diffline class='unchanged'><linum>212:202</linum><raw>fragment.appendChild(document.createTextNode(text.slice(lastIndex))); </raw></diffline>
+<diffline class='unchanged'><linum>213:203</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>214:204</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>215:205</linum><raw>parent.replaceChild(fragment, textNode); </raw></diffline>
+<diffline class='unchanged'><linum>216:206</linum><raw>}); </raw></diffline>
+<diffline class='unchanged'><linum>217:207</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>218:208</linum><raw>updateMatchCount(); </raw></diffline>
+<diffline class='unchanged'><linum>219:209</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>220:210</linum><raw>// Jump to first match </raw></diffline>
+<diffline class='unchanged'><linum>221:211</linum><raw>if (matches.length > 0) { </raw></diffline>
+<diffline class='unchanged'><linum>222:212</linum><raw>currentMatchIndex = 0; </raw></diffline>
+<diffline class='unchanged'><linum>223:213</linum><raw>highlightCurrentMatch(); </raw></diffline>
+<diffline class='unchanged'><linum>224:214</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>225:215</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>226:216</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>227:217</linum><raw>// Update the match count display </raw></diffline>
+<diffline class='unchanged'><linum>228:218</linum><raw>function updateMatchCount() { </raw></diffline>
+<diffline class='unchanged'><linum>229:219</linum><raw>if (matches.length === 0) { </raw></diffline>
+<diffline class='unchanged'><linum>230:220</linum><raw>findCount.textContent = findInput.value ? 'No matches' : ''; </raw></diffline>
+<diffline class='unchanged'><linum>231:221</linum><raw>} else { </raw></diffline>
+<diffline class='unchanged'><linum>232:222</linum><raw>findCount.textContent = `${currentMatchIndex + 1} of ${matches.length}`; </raw></diffline>
+<diffline class='unchanged'><linum>233:223</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>234:224</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>235:225</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>236:226</linum><raw>// Highlight current match and scroll to it </raw></diffline>
+<diffline class='unchanged'><linum>237:227</linum><raw>function highlightCurrentMatch() { </raw></diffline>
+<diffline class='unchanged'><linum>238:228</linum><raw>// Remove current class from all </raw></diffline>
+<diffline class='unchanged'><linum>239:229</linum><raw>matches.forEach(m => m.classList.remove('current')); </raw></diffline>
+<diffline class='unchanged'><linum>240:230</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>241:231</linum><raw>if (currentMatchIndex >= 0 && currentMatchIndex < matches.length) { </raw></diffline>
+<diffline class='unchanged'><linum>242:232</linum><raw>const current = matches[currentMatchIndex]; </raw></diffline>
+<diffline class='unchanged'><linum>243:233</linum><raw>current.classList.add('current'); </raw></diffline>
+<diffline class='unchanged'><linum>244:234</linum><raw>current.scrollIntoView({ behavior: 'smooth', block: 'center' }); </raw></diffline>
+<diffline class='unchanged'><linum>245:235</linum><raw>updateMatchCount(); </raw></diffline>
+<diffline class='unchanged'><linum>246:236</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>247:237</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>248:238</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>249:239</linum><raw>// Go to next match </raw></diffline>
+<diffline class='unchanged'><linum>250:240</linum><raw>function nextMatch() { </raw></diffline>
+<diffline class='unchanged'><linum>251:241</linum><raw>if (matches.length === 0) return; </raw></diffline>
+<diffline class='unchanged'><linum>252:242</linum><raw>currentMatchIndex = (currentMatchIndex + 1) % matches.length; </raw></diffline>
+<diffline class='unchanged'><linum>253:243</linum><raw>highlightCurrentMatch(); </raw></diffline>
+<diffline class='unchanged'><linum>254:244</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>255:245</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>256:246</linum><raw>// Go to previous match </raw></diffline>
+<diffline class='unchanged'><linum>257:247</linum><raw>function prevMatch() { </raw></diffline>
+<diffline class='unchanged'><linum>258:248</linum><raw>if (matches.length === 0) return; </raw></diffline>
+<diffline class='unchanged'><linum>259:249</linum><raw>currentMatchIndex = (currentMatchIndex - 1 + matches.length) % matches.length; </raw></diffline>
+<diffline class='unchanged'><linum>260:250</linum><raw>highlightCurrentMatch(); </raw></diffline>
+<diffline class='unchanged'><linum>261:251</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>262:252</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>263:253</linum><raw>// Debounce function </raw></diffline>
+<diffline class='unchanged'><linum>264:254</linum><raw>function debounce(func, wait) { </raw></diffline>
+<diffline class='unchanged'><linum>265:255</linum><raw>let timeout; </raw></diffline>
+<diffline class='unchanged'><linum>266:256</linum><raw>return function(...args) { </raw></diffline>
+<diffline class='unchanged'><linum>267:257</linum><raw>clearTimeout(timeout); </raw></diffline>
+<diffline class='unchanged'><linum>268:258</linum><raw>timeout = setTimeout(() => func.apply(this, args), wait); </raw></diffline>
+<diffline class='unchanged'><linum>269:259</linum><raw>}; </raw></diffline>
+<diffline class='unchanged'><linum>270:260</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>271:261</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>272:262</linum><raw>// Zoom functions </raw></diffline>
+<diffline class='unchanged'><linum>273:263</linum><raw>function applyZoom() { </raw></diffline>
+<diffline class='unchanged'><linum>274:264</linum><raw>content.style.zoom = zoomLevel; </raw></diffline>
+<diffline class='unchanged'><linum>275:265</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>276:266</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>277:267</linum><raw>function zoomIn() { </raw></diffline>
+<diffline class='unchanged'><linum>278:268</linum><raw>if (zoomLevel < ZOOM_MAX) { </raw></diffline>
+<diffline class='unchanged'><linum>279:269</linum><raw>zoomLevel = Math.min(ZOOM_MAX, Math.round((zoomLevel + ZOOM_STEP) * 10) / 10); </raw></diffline>
+<diffline class='unchanged'><linum>280:270</linum><raw>applyZoom(); </raw></diffline>
+<diffline class='unchanged'><linum>281:271</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>282:272</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>283:273</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>284:274</linum><raw>function zoomOut() { </raw></diffline>
+<diffline class='unchanged'><linum>285:275</linum><raw>if (zoomLevel > ZOOM_MIN) { </raw></diffline>
+<diffline class='unchanged'><linum>286:276</linum><raw>zoomLevel = Math.max(ZOOM_MIN, Math.round((zoomLevel - ZOOM_STEP) * 10) / 10); </raw></diffline>
+<diffline class='unchanged'><linum>287:277</linum><raw>applyZoom(); </raw></diffline>
+<diffline class='unchanged'><linum>288:278</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>289:279</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>290:280</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>291:281</linum><raw>function resetZoom() { </raw></diffline>
+<diffline class='unchanged'><linum>292:282</linum><raw>zoomLevel = 1.0; </raw></diffline>
+<diffline class='unchanged'><linum>293:283</linum><raw>applyZoom(); </raw></diffline>
+<diffline class='unchanged'><linum>294:284</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>295:285</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>296:286</linum><raw>// Debounced search </raw></diffline>
+<diffline class='unchanged'><linum>297:287</linum><raw>const debouncedSearch = debounce((term) => { </raw></diffline>
+<diffline class='unchanged'><linum>298:288</linum><raw>if (term !== lastSearchTerm) { </raw></diffline>
+<diffline class='unchanged'><linum>299:289</linum><raw>lastSearchTerm = term; </raw></diffline>
+<diffline class='unchanged'><linum>300:290</linum><raw>highlightMatches(term); </raw></diffline>
+<diffline class='unchanged'><linum>301:291</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>302:292</linum><raw>}, 150); </raw></diffline>
+<diffline class='unchanged'><linum>303:293</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>304:294</linum><raw>// Event listeners </raw></diffline>
+<diffline class='unchanged'><linum>305:295</linum><raw>findInput.addEventListener('input', (e) => { </raw></diffline>
+<diffline class='unchanged'><linum>306:296</linum><raw>debouncedSearch(e.target.value); </raw></diffline>
+<diffline class='unchanged'><linum>307:297</linum><raw>}); </raw></diffline>
+<diffline class='unchanged'><linum>308:298</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>309:299</linum><raw>findInput.addEventListener('keydown', (e) => { </raw></diffline>
+<diffline class='unchanged'><linum>310:300</linum><raw>if (e.key === 'Enter') { </raw></diffline>
+<diffline class='unchanged'><linum>311:301</linum><raw>e.preventDefault(); </raw></diffline>
+<diffline class='unchanged'><linum>312:302</linum><raw>if (e.shiftKey) { </raw></diffline>
+<diffline class='unchanged'><linum>313:303</linum><raw>prevMatch(); </raw></diffline>
+<diffline class='unchanged'><linum>314:304</linum><raw>} else { </raw></diffline>
+<diffline class='unchanged'><linum>315:305</linum><raw>nextMatch(); </raw></diffline>
+<diffline class='unchanged'><linum>316:306</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>317:307</linum><raw>} else if (e.key === 'Escape') { </raw></diffline>
+<diffline class='unchanged'><linum>318:308</linum><raw>hideFindBar(); </raw></diffline>
+<diffline class='unchanged'><linum>319:309</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>320:310</linum><raw>}); </raw></diffline>
+<diffline class='unchanged'><linum>321:311</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>322:312</linum><raw>findNext.addEventListener('click', nextMatch); </raw></diffline>
+<diffline class='unchanged'><linum>323:313</linum><raw>findPrev.addEventListener('click', prevMatch); </raw></diffline>
+<diffline class='unchanged'><linum>324:314</linum><raw>findClose.addEventListener('click', hideFindBar); </raw></diffline>
+<diffline class='unchanged'><linum>325:315</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>326:316</linum><raw>// Global keyboard shortcuts </raw></diffline>
+<diffline class='unchanged'><linum>327:317</linum><raw>document.addEventListener('keydown', (e) => { </raw></diffline>
+<diffline class='unchanged'><linum>328:318</linum><raw>if ((e.metaKey || e.ctrlKey) && e.key === 'f') { </raw></diffline>
+<diffline class='unchanged'><linum>329:319</linum><raw>e.preventDefault(); </raw></diffline>
+<diffline class='unchanged'><linum>330:320</linum><raw>showFindBar(); </raw></diffline>
+<diffline class='unchanged'><linum>331:321</linum><raw>} else if (e.key === 'Escape' && !findBar.classList.contains('hidden')) { </raw></diffline>
+<diffline class='unchanged'><linum>332:322</linum><raw>hideFindBar(); </raw></diffline>
+<diffline class='unchanged'><linum>333:323</linum><raw>} else if ((e.metaKey || e.ctrlKey) && (e.key === '=' || e.key === '+')) { </raw></diffline>
+<diffline class='unchanged'><linum>334:324</linum><raw>// Cmd+= or Cmd++ for zoom in </raw></diffline>
+<diffline class='unchanged'><linum>335:325</linum><raw>e.preventDefault(); </raw></diffline>
+<diffline class='unchanged'><linum>336:326</linum><raw>zoomIn(); </raw></diffline>
+<diffline class='unchanged'><linum>337:327</linum><raw>} else if ((e.metaKey || e.ctrlKey) && e.key === '-') { </raw></diffline>
+<diffline class='unchanged'><linum>338:328</linum><raw>// Cmd+- for zoom out </raw></diffline>
+<diffline class='unchanged'><linum>339:329</linum><raw>e.preventDefault(); </raw></diffline>
+<diffline class='unchanged'><linum>340:330</linum><raw>zoomOut(); </raw></diffline>
+<diffline class='unchanged'><linum>341:331</linum><raw>} else if ((e.metaKey || e.ctrlKey) && e.key === '0') { </raw></diffline>
+<diffline class='unchanged'><linum>342:332</linum><raw>// Cmd+0 for reset zoom </raw></diffline>
+<diffline class='unchanged'><linum>343:333</linum><raw>e.preventDefault(); </raw></diffline>
+<diffline class='unchanged'><linum>344:334</linum><raw>resetZoom(); </raw></diffline>
+<diffline class='unchanged'><linum>345:335</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>346:336</linum><raw>}); </raw></diffline>
+<diffline class='unchanged'><linum>347:337</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>348:338</linum><raw>// Load and apply configuration </raw></diffline>
+<diffline class='unchanged'><linum>349:339</linum><raw>async function loadConfig() { </raw></diffline>
+<diffline class='unchanged'><linum>350:340</linum><raw>try { </raw></diffline>
+<diffline class='unchanged'><linum>351:341</linum><raw>const config = await window.go.main.App.GetConfig(); </raw></diffline>
+<diffline class='unchanged'><linum>352:342</linum><raw>if (config.font_size && config.font_size > 0) { </raw></diffline>
+<diffline class='unchanged'><linum>353:343</linum><raw>content.style.fontSize = config.font_size + 'px'; </raw></diffline>
+<diffline class='unchanged'><linum>354:344</linum><raw>} </raw></diffline>
+<diffline><linum>355:345</linum><raw><inserted>// Load and inject custom chrome CSS</inserted> </raw></diffline>
+<diffline><linum>355:346</linum><raw><inserted>            const chromeCSS = await window.go.main.App.GetChromeCSS();</inserted> </raw></diffline>
+<diffline><linum>355:347</linum><raw><inserted>            if (chromeCSS) {</inserted> </raw></diffline>
+<diffline><linum>355:348</linum><raw><inserted>                const style = document.createElement('style');</inserted> </raw></diffline>
+<diffline><linum>355:349</linum><raw><inserted>                style.id = 'fenestro-chrome-css';</inserted> </raw></diffline>
+<diffline><linum>355:350</linum><raw><inserted>                style.textContent = chromeCSS;</inserted> </raw></diffline>
+<diffline><linum>355:351</linum><raw><inserted>                document.head.appendChild(style);</inserted> </raw></diffline>
+<diffline><linum>355:352</linum><raw><inserted>            }</inserted> </raw></diffline>
+<diffline><linum>355:353</linum><raw><inserted>⏎</inserted>        } catch (err) { </raw></diffline>
+<diffline class='unchanged'><linum>356:354</linum><raw>console.error('Error loading config:', err); </raw></diffline>
+<diffline class='unchanged'><linum>357:355</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>358:356</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>359:357</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>360:358</linum><raw>// Initialize </raw></diffline>
+<diffline class='unchanged'><linum>361:359</linum><raw>document.addEventListener('DOMContentLoaded', async () => { </raw></diffline>
+<diffline class='unchanged'><linum>362:360</linum><raw>await loadConfig(); </raw></diffline>
+<diffline class='unchanged'><linum>363:361</linum><raw>await loadContent(); </raw></diffline>
+<diffline class='unchanged'><linum>364:362</linum><raw>await loadFiles(); </raw></diffline>
+<diffline class='unchanged'><linum>365:363</linum><raw>}); </raw></diffline>
+<diffline class='unchanged'><linum>366:364</linum><raw> </raw></diffline>
+<diffline class='unchanged'><linum>367:365</linum><raw>// Listen for backend events </raw></diffline>
+<diffline class='unchanged'><linum>368:366</linum><raw>if (window.runtime) { </raw></diffline>
+<diffline class='unchanged'><linum>369:367</linum><raw>window.runtime.EventsOn('file-added', onFileAdded); </raw></diffline>
+<diffline class='unchanged'><linum>370:368</linum><raw>window.runtime.EventsOn('content-replaced', onContentReplaced); </raw></diffline>
+<diffline class='unchanged'><linum>371:369</linum><raw>} </raw></diffline>
+<diffline class='unchanged'><linum>372:370</linum><raw>})(); </raw></diffline>			</diff>
+		<script language="JavaScript">
+			activateLineNumbers();
+		</script>
+		</body>
+	</html>

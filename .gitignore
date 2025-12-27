@@ -1,0 +1,7 @@
+# IDE files
+.idea/
+
+# Build artifacts
+fenestro
+build/bin/
+node_modules/

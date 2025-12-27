@@ -1,0 +1,20 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "fenestro",
+  "outputfilename": "fenestro",
+  "frontend:install": "",
+  "frontend:build": "",
+  "frontend:dev:watcher": "",
+  "frontend:dev:serverUrl": "",
+  "author": {
+    "name": "Dachary Carey",
+    "email": ""
+  },
+  "info": {
+    "companyName": "",
+    "productName": "Fenestro",
+    "productVersion": "2.0.0",
+    "copyright": "Copyright 2025 Dachary Carey",
+    "comments": "HTML viewer for command-line output"
+  }
+}
