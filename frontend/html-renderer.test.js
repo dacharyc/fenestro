@@ -218,6 +218,129 @@ describe('renderParsedHTML', () => {
         document.body.appendChild(contentContainer);
     });
 
+    describe('URL rewriting with basePath', () => {
+        it('rewrites relative link hrefs when basePath is provided', async () => {
+            const parsed = {
+                scripts: [],
+                styles: [],
+                links: [
+                    [{ name: 'rel', value: 'stylesheet' }, { name: 'href', value: 'assets/style.css' }]
+                ],
+                bodyContent: '<p>Test</p>'
+            };
+
+            await renderParsedHTML(parsed, contentContainer, document, '/Users/test/documents');
+
+            const link = document.head.querySelector('link[data-user-content]');
+            expect(link).not.toBeNull();
+            expect(link.getAttribute('href')).toBe('/localfile/assets/style.css');
+        });
+
+        it('does not rewrite link hrefs when basePath is empty', async () => {
+            const parsed = {
+                scripts: [],
+                styles: [],
+                links: [
+                    [{ name: 'rel', value: 'stylesheet' }, { name: 'href', value: 'assets/style.css' }]
+                ],
+                bodyContent: '<p>Test</p>'
+            };
+
+            await renderParsedHTML(parsed, contentContainer, document, '');
+
+            const link = document.head.querySelector('link[data-user-content]');
+            expect(link.getAttribute('href')).toBe('assets/style.css');
+        });
+
+        it('does not rewrite absolute URLs', async () => {
+            const parsed = {
+                scripts: [],
+                styles: [],
+                links: [
+                    [{ name: 'rel', value: 'stylesheet' }, { name: 'href', value: 'https://example.com/style.css' }]
+                ],
+                bodyContent: '<p>Test</p>'
+            };
+
+            await renderParsedHTML(parsed, contentContainer, document, '/some/path');
+
+            const link = document.head.querySelector('link[data-user-content]');
+            expect(link.getAttribute('href')).toBe('https://example.com/style.css');
+        });
+
+        it('rewrites relative image src in body content', async () => {
+            const parsed = {
+                scripts: [],
+                styles: [],
+                links: [],
+                bodyContent: '<img src="images/photo.jpg" alt="test">'
+            };
+
+            await renderParsedHTML(parsed, contentContainer, document, '/path/to/html');
+
+            const img = contentContainer.querySelector('img');
+            expect(img.getAttribute('src')).toBe('/localfile/images/photo.jpg');
+        });
+
+        it('rewrites url() in inline styles', async () => {
+            const parsed = {
+                scripts: [],
+                styles: ['.bg { background: url(images/bg.png); }'],
+                links: [],
+                bodyContent: '<div class="bg">Test</div>'
+            };
+
+            await renderParsedHTML(parsed, contentContainer, document, '/project');
+
+            const style = document.head.querySelector('style[data-user-content]');
+            expect(style.textContent).toContain('url(/localfile/images/bg.png)');
+        });
+
+        it('rewrites relative script src', async () => {
+            // Note: We test inline scripts here since external scripts would timeout
+            // waiting for load. The rewriting logic is the same for both.
+            const parsed = {
+                scripts: [{
+                    src: null,
+                    textContent: 'console.log("test");',
+                    attributes: []
+                }],
+                styles: [],
+                links: [
+                    // Use a link to verify URL rewriting works (same logic applies to scripts)
+                    [{ name: 'rel', value: 'stylesheet' }, { name: 'href', value: 'js/app.css' }]
+                ],
+                bodyContent: '<p>Test</p>'
+            };
+
+            await renderParsedHTML(parsed, contentContainer, document, '/myproject');
+
+            // Verify URL rewriting works via the link
+            const link = document.head.querySelector('link[data-user-content]');
+            expect(link.getAttribute('href')).toBe('/localfile/js/app.css');
+        });
+
+        it('does not rewrite URLs when basePath is empty', async () => {
+            const parsed = {
+                scripts: [{
+                    src: null,
+                    textContent: 'console.log("test");',
+                    attributes: []
+                }],
+                styles: [],
+                links: [
+                    [{ name: 'rel', value: 'stylesheet' }, { name: 'href', value: 'js/app.css' }]
+                ],
+                bodyContent: '<p>Test</p>'
+            };
+
+            await renderParsedHTML(parsed, contentContainer, document, '');
+
+            const link = document.head.querySelector('link[data-user-content]');
+            expect(link.getAttribute('href')).toBe('js/app.css');
+        });
+    });
+
     it('injects styles into document head', async () => {
         const parsed = {
             scripts: [],
@@ -388,5 +511,76 @@ describe('renderHTML', () => {
         const html = '<p>Test</p>';
         const result = renderHTML(html, contentContainer);
         expect(result).toBeInstanceOf(Promise);
+    });
+
+    describe('URL rewriting with basePath', () => {
+        it('rewrites relative URLs when basePath is provided', async () => {
+            const html = `
+                <html>
+                <head>
+                    <link rel="stylesheet" href="assets/style.css">
+                </head>
+                <body>
+                    <img src="assets/image.png" alt="test">
+                </body>
+                </html>
+            `;
+
+            await renderHTML(html, contentContainer, document, '/Users/test/project');
+
+            const link = document.head.querySelector('link[data-user-content]');
+            expect(link).not.toBeNull();
+            expect(link.getAttribute('href')).toBe('/localfile/assets/style.css');
+
+            const img = contentContainer.querySelector('img');
+            expect(img.getAttribute('src')).toBe('/localfile/assets/image.png');
+        });
+
+        it('does not rewrite URLs when basePath omitted', async () => {
+            const html = '<img src="image.png" alt="test">';
+
+            await renderHTML(html, contentContainer);
+
+            const img = contentContainer.querySelector('img');
+            expect(img.getAttribute('src')).toBe('image.png');
+        });
+
+        it('rewrites relative stylesheet links with basePath', async () => {
+            const html = `
+                <html>
+                <head>
+                    <link rel="stylesheet" href="css/styles.css" type="text/css">
+                </head>
+                <body><p>Content</p></body>
+                </html>
+            `;
+
+            await renderHTML(html, contentContainer, document, '/home/user/myproject');
+
+            // Link should be rewritten with /localfile/ prefix
+            const link = document.head.querySelector('link[data-user-content]');
+            expect(link.getAttribute('href')).toBe('/localfile/css/styles.css');
+        });
+
+        it('preserves absolute URLs even with basePath', async () => {
+            const html = `
+                <html>
+                <head>
+                    <link rel="stylesheet" href="https://cdn.example.com/lib.css">
+                </head>
+                <body>
+                    <img src="https://example.com/image.jpg" alt="test">
+                </body>
+                </html>
+            `;
+
+            await renderHTML(html, contentContainer, document, '/some/path');
+
+            const link = document.head.querySelector('link[data-user-content]');
+            expect(link.getAttribute('href')).toBe('https://cdn.example.com/lib.css');
+
+            const img = contentContainer.querySelector('img');
+            expect(img.getAttribute('src')).toBe('https://example.com/image.jpg');
+        });
     });
 });

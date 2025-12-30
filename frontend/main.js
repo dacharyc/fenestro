@@ -29,15 +29,16 @@ import { applyFontSize, injectChromeCSS } from './config.js';
     const fileList = document.getElementById('file-list');
 
     // Render HTML content using the html-renderer module
-    async function renderHTML(html) {
-        await renderHTMLContent(html, content);
+    async function renderHTML(html, basePath = '') {
+        await renderHTMLContent(html, content, document, basePath);
     }
 
     // Load HTML content from backend
     async function loadContent() {
         try {
             const html = await window.go.main.App.GetHTMLContent();
-            await renderHTML(html);
+            const basePath = await window.go.main.App.GetCurrentBasePath();
+            await renderHTML(html, basePath);
         } catch (err) {
             content.innerHTML = '<p style="color: red;">Error loading content: ' + err + '</p>';
         }
@@ -79,7 +80,8 @@ import { applyFontSize, injectChromeCSS } from './config.js';
     async function selectFile(index) {
         try {
             const html = await window.go.main.App.SelectFile(index);
-            await renderHTML(html);
+            const basePath = await window.go.main.App.GetCurrentBasePath();
+            await renderHTML(html, basePath);
             selectedIndex = index;
             updateSidebar();
             // Clear find highlights when switching files

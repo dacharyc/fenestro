@@ -68,6 +68,57 @@ func TestGetHTMLContentInvalidIndex(t *testing.T) {
 	}
 }
 
+func TestGetCurrentBasePath(t *testing.T) {
+	app := NewApp(FileEntry{
+		Name:    "test.html",
+		Path:    "/Users/test/documents/test.html",
+		Content: "<html></html>",
+	}, "")
+
+	got := app.GetCurrentBasePath()
+	want := "/Users/test/documents"
+	if got != want {
+		t.Errorf("GetCurrentBasePath() = %q, want %q", got, want)
+	}
+}
+
+func TestGetCurrentBasePathEmpty(t *testing.T) {
+	// Test with empty files
+	app := &App{
+		files:        []FileEntry{},
+		currentIndex: 0,
+	}
+
+	got := app.GetCurrentBasePath()
+	if got != "" {
+		t.Errorf("GetCurrentBasePath() with empty files should return empty string, got %q", got)
+	}
+}
+
+func TestGetCurrentBasePathStdin(t *testing.T) {
+	// Test stdin content (no path)
+	app := NewApp(FileEntry{
+		Name:    "stdin",
+		Path:    "", // stdin has no path
+		Content: "<html></html>",
+	}, "")
+
+	got := app.GetCurrentBasePath()
+	if got != "" {
+		t.Errorf("GetCurrentBasePath() with stdin (empty path) should return empty string, got %q", got)
+	}
+}
+
+func TestGetCurrentBasePathInvalidIndex(t *testing.T) {
+	app := NewApp(FileEntry{Name: "test", Path: "/tmp/test.html", Content: "<html></html>"}, "")
+	app.currentIndex = 5 // Invalid index
+
+	got := app.GetCurrentBasePath()
+	if got != "" {
+		t.Errorf("GetCurrentBasePath() with invalid index should return empty string, got %q", got)
+	}
+}
+
 func TestGetFiles(t *testing.T) {
 	app := NewApp(FileEntry{Name: "test1", Content: "<html>1</html>"}, "")
 	app.files = append(app.files, FileEntry{Name: "test2", Content: "<html>2</html>"})

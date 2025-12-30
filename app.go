@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -104,6 +105,24 @@ func (a *App) GetHTMLContent() string {
 		return ""
 	}
 	return a.files[a.currentIndex].Content
+}
+
+// GetCurrentBasePath returns the directory containing the current file
+// Used by frontend to set <base> tag for resolving relative URLs
+// Returns empty string for stdin content (no file path)
+func (a *App) GetCurrentBasePath() string {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	if len(a.files) == 0 || a.currentIndex < 0 || a.currentIndex >= len(a.files) {
+		return ""
+	}
+	path := a.files[a.currentIndex].Path
+	if path == "" {
+		return ""
+	}
+	// Return the directory containing the file
+	dir := filepath.Dir(path)
+	return dir
 }
 
 // GetFiles returns all files for the sidebar

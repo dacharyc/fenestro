@@ -258,6 +258,9 @@ func runGUI(entry FileEntry, windowID string, isWindowIDMode bool) {
 		fmt.Fprintf(os.Stderr, "Warning: Could not start IPC server: %v\n", err)
 	}
 
+	// Create local file handler for serving relative assets
+	localFileHandler := NewLocalFileHandler(app)
+
 	// Run Wails application
 	err = wails.Run(&options.App{
 		Title:     entry.Name,
@@ -266,7 +269,8 @@ func runGUI(entry FileEntry, windowID string, isWindowIDMode bool) {
 		MinWidth:  MinWindowWidth,
 		MinHeight: MinWindowHeight,
 		AssetServer: &assetserver.Options{
-			Assets: assets,
+			Assets:  assets,
+			Handler: localFileHandler,
 		},
 		OnStartup: app.startup,
 		OnShutdown: func(ctx context.Context) {
