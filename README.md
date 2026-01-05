@@ -14,6 +14,10 @@ A lightweight macOS app that renders HTML in a native window. Built with Go usin
 - Dark mode support for UI elements
 - Minimal footprint - single binary app bundle
 
+## Used By
+
+- Powers the visual output in [CleanDiff](https://cleandiffapp.com)
+
 ## Installation
 
 ### Prerequisites
